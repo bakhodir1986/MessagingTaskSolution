@@ -20,7 +20,7 @@ namespace DataEntryService
         private static FileSystemWatcher watcher = new FileSystemWatcher(WorkFolderPath);
         private static string _clientId;
 
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             // Create the clients that we'll use for sending and processing messages.
             _client = new ServiceBusClient(connectionString);
@@ -32,6 +32,9 @@ namespace DataEntryService
 
             Console.WriteLine("Press any key to end the application");
             Console.ReadKey();
+
+            await _senderBus.DisposeAsync();
+            await _client.DisposeAsync();
         }
 
         private static void ConfigureFileSystemWatcher()
@@ -67,27 +70,18 @@ namespace DataEntryService
         private static async Task ProcessMessage(string fullPath, string fileName)
         {
             var fileBytes = Utils.GetBinaryFile(fullPath);
-
-            try
+            
+            //check size of message 
+            if (fileBytes.Length > MessageMaxSize)
             {
-                //check size of message 
-                if (fileBytes.Length > MessageMaxSize)
-                {
-                    await SendFileByChunks(fileBytes,  fileName);
-                }
-                else
-                {
-                    await SendMessage(_clientId, fileBytes, fileName);
-                }
-
-                Console.WriteLine($"A batch of {fullPath} messages has been published to the queue.");
-
+                await SendFileByChunks(fileBytes, fileName);
             }
-            finally
+            else
             {
-                await _senderBus.DisposeAsync();
-                await _client.DisposeAsync();
+                await SendMessage(_clientId, fileBytes, fileName);
             }
+
+            Console.WriteLine($"A batch of {fullPath} messages has been published to the queue.");
         }
 
         private static async Task SendFileByChunks(byte[] fileBytes, string fileName)
