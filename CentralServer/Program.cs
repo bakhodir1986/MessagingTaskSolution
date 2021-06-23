@@ -53,9 +53,17 @@ namespace CentralServer
 
         private static async Task MessageHandler(ProcessMessageEventArgs arg)
         {
-            string fileName = Guid.NewGuid().ToString();
+            string fileName = arg.Message.ApplicationProperties["FileName"].ToString();
+            string clientId = arg.Message.ApplicationProperties["ClientId"].ToString();
 
-            File.WriteAllBytes(Path.Combine(workFolder, fileName + ".pdf")
+            string saveFolder = Path.Combine(workFolder, clientId ?? string.Empty);
+
+            if (!Directory.Exists(saveFolder))
+            {
+                Directory.CreateDirectory(saveFolder);
+            }
+
+            Utils.AppendAllBytes(Path.Combine(saveFolder, fileName ?? string.Empty)
                 , arg.Message.Body.ToArray());
 
             // complete the message. messages is deleted from the queue. 
