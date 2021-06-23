@@ -16,7 +16,7 @@ namespace DataEntryService
         private static ServiceBusSender _senderBus;
 
         private const string WorkFolderPath = @"C:\LearnPdf";
-        private const int MessageMaxSize = 1024 * 256;
+        private const int MessageMaxSize = 1024 * 255;
         private static FileSystemWatcher watcher = new FileSystemWatcher(WorkFolderPath);
         private static string _clientId;
 
@@ -99,9 +99,8 @@ namespace DataEntryService
 
             for (int i = 0; i < chunksCount; i++)
             {
-                
-                int beginPosition = i * MessageMaxSize == 0 ? 0 : i * MessageMaxSize - 1024;
-                int lengthOfArray = MessageMaxSize - 1024;
+                int beginPosition = i * MessageMaxSize;
+                int lengthOfArray = MessageMaxSize;
 
                 int remainingBytes = fileBytes.Length - beginPosition;
 
@@ -110,25 +109,16 @@ namespace DataEntryService
                 var chunkArray = Utils.SubArray(fileBytes, beginPosition, lengthOfArray);
                 
                 await SendMessage( _clientId, chunkArray, fullPath, fileName);
-
             }
         }
 
         private static async Task SendMessage( string clientId, byte[] fileBytes, string fullPath, string fileName)
         {
-            using ServiceBusMessageBatch messageBatch = _senderBus.CreateMessageBatchAsync().GetAwaiter().GetResult();
-
             var message = new ServiceBusMessage(new BinaryData(fileBytes));
             message.ApplicationProperties.Add("ClientId", clientId);
             message.ApplicationProperties.Add("FileName", fileName);
 
-            if (!messageBatch.TryAddMessage(message))
-            {
-                throw new Exception($"The message {fullPath} is too large to fit in the batch.");
-            }
-
-            await _senderBus.SendMessagesAsync(messageBatch);
-
+            await _senderBus.SendMessageAsync(message);
         }
 
     }
