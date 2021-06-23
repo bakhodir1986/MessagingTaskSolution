@@ -20,7 +20,7 @@ namespace DataEntryService
         private static FileSystemWatcher watcher = new FileSystemWatcher(WorkFolderPath);
         private static string _clientId;
 
-        static async Task Main(string[] args)
+        static void Main(string[] args)
         {
             // Create the clients that we'll use for sending and processing messages.
             _client = new ServiceBusClient(connectionString);
@@ -61,11 +61,10 @@ namespace DataEntryService
 
         private static void HandleFileChanges(object sender, FileSystemEventArgs e)
         {
-            ProcessMessage(e.FullPath, e.Name);
-            
+            ProcessMessage(e.FullPath, e.Name).RunSynchronously();
         }
 
-        private static void ProcessMessage(string fullPath, string fileName)
+        private static async Task ProcessMessage(string fullPath, string fileName)
         {
             var fileBytes = Utils.GetBinaryFile(fullPath);
 
@@ -74,11 +73,11 @@ namespace DataEntryService
                 //check size of message 
                 if (fileBytes.Length > MessageMaxSize)
                 {
-                    SendFileByChunks(fullPath, fileBytes,  fileName);
+                    await SendFileByChunks(fullPath, fileBytes,  fileName);
                 }
                 else
                 {
-                    SendMessage( _clientId, fileBytes, fullPath, fileName);
+                    await SendMessage( _clientId, fileBytes, fullPath, fileName);
                 }
 
                 Console.WriteLine($"A batch of {fullPath} messages has been published to the queue.");
@@ -86,12 +85,12 @@ namespace DataEntryService
             }
             finally
             {
-                _senderBus.DisposeAsync().GetAwaiter().GetResult();
-                _client.DisposeAsync().GetAwaiter().GetResult();
+                await _senderBus.DisposeAsync();
+                await _client.DisposeAsync();
             }
         }
 
-        private static void SendFileByChunks(string fullPath, byte[] fileBytes, string fileName)
+        private static async Task SendFileByChunks(string fullPath, byte[] fileBytes, string fileName)
         {
 
             int chunksCount = (fileBytes.Length % MessageMaxSize) == 0
@@ -110,12 +109,12 @@ namespace DataEntryService
 
                 var chunkArray = Utils.SubArray(fileBytes, beginPosition, lengthOfArray);
                 
-                SendMessage( _clientId, chunkArray, fullPath, fileName);
+                await SendMessage( _clientId, chunkArray, fullPath, fileName);
 
             }
         }
 
-        private static void SendMessage( string clientId, byte[] fileBytes, string fullPath, string fileName)
+        private static async Task SendMessage( string clientId, byte[] fileBytes, string fullPath, string fileName)
         {
             using ServiceBusMessageBatch messageBatch = _senderBus.CreateMessageBatchAsync().GetAwaiter().GetResult();
 
@@ -128,7 +127,7 @@ namespace DataEntryService
                 throw new Exception($"The message {fullPath} is too large to fit in the batch.");
             }
 
-            _senderBus.SendMessagesAsync(messageBatch).GetAwaiter().GetResult();
+            await _senderBus.SendMessagesAsync(messageBatch);
 
         }
 

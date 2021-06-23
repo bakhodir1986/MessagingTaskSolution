@@ -9,7 +9,7 @@ namespace CentralServer
     {
         private static string connectionString = "Endpoint=sb://learnquque.servicebus.windows.net/;SharedAccessKeyName=myaccess;SharedAccessKey=agyIY+H3HnSVv2xgmKVgtTXTy4KEL1rKF8bUDoiDqQE=";
         private static string queueName = "filequeue";
-        private const string workFolder = @"C:\LearnPdf\Server";
+        private const string WorkFolder = @"C:\LearnPdf\Server";
         static async Task Main(string[] args)
         {
             var client = new ServiceBusClient(connectionString);
@@ -56,7 +56,7 @@ namespace CentralServer
             string fileName = arg.Message.ApplicationProperties["FileName"].ToString();
             string clientId = arg.Message.ApplicationProperties["ClientId"].ToString();
 
-            string saveFolder = Path.Combine(workFolder, clientId ?? string.Empty);
+            string saveFolder = Path.Combine(WorkFolder, clientId ?? string.Empty);
 
             if (!Directory.Exists(saveFolder))
             {
