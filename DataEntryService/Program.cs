@@ -62,49 +62,32 @@ namespace DataEntryService
             watcher.EnableRaisingEvents = true;
         }
 
-        private static void HandleFileChanges(object sender, FileSystemEventArgs e)
+        private static async void HandleFileChanges(object sender, FileSystemEventArgs e)
         {
-            ProcessMessage(e.FullPath, e.Name).RunSynchronously();
+            await ProcessMessage(e.FullPath, e.Name);
         }
 
         private static async Task ProcessMessage(string fullPath, string fileName)
         {
-            var fileBytes = Utils.GetBinaryFile(fullPath);
-            
-            //check size of message 
-            if (fileBytes.Length > MessageMaxSize)
-            {
-                await SendFileByChunks(fileBytes, fileName);
-            }
-            else
-            {
-                await SendMessage(_clientId, fileBytes, fileName);
-            }
+            await SendFile(fullPath, fileName);
 
             Console.WriteLine($"A batch of {fullPath} messages has been published to the queue.");
         }
 
-        private static async Task SendFileByChunks(byte[] fileBytes, string fileName)
+        private static async Task SendFile(string fullPath , string filename)
         {
+            await using FileStream file = new FileStream(fullPath, FileMode.Open, FileAccess.Read);
 
-            int chunksCount = (fileBytes.Length % MessageMaxSize) == 0
-                ? (fileBytes.Length / MessageMaxSize)
-                : (fileBytes.Length / MessageMaxSize) + 1;
+            var bytes = new byte[MessageMaxSize];
 
-            for (int i = 0; i < chunksCount; i++)
+            while (file.Read(bytes, 0, MessageMaxSize) != 0)
             {
-                int beginPosition = i * MessageMaxSize;
-                int lengthOfArray = MessageMaxSize;
+                await SendMessage(_clientId, bytes, filename);
 
-                int remainingBytes = fileBytes.Length - beginPosition;
-
-                if (remainingBytes < MessageMaxSize) lengthOfArray = remainingBytes;
-
-                var chunkArray = Utils.SubArray(fileBytes, beginPosition, lengthOfArray);
-                
-                await SendMessage( _clientId, chunkArray, fileName);
+                bytes = new byte[MessageMaxSize]; //clear buffer
             }
         }
+        
 
         private static async Task SendMessage( string clientId, byte[] fileBytes, string fileName)
         {
