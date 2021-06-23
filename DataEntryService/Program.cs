@@ -73,11 +73,11 @@ namespace DataEntryService
                 //check size of message 
                 if (fileBytes.Length > MessageMaxSize)
                 {
-                    await SendFileByChunks(fullPath, fileBytes,  fileName);
+                    await SendFileByChunks(fileBytes,  fileName);
                 }
                 else
                 {
-                    await SendMessage( _clientId, fileBytes, fullPath, fileName);
+                    await SendMessage(_clientId, fileBytes, fileName);
                 }
 
                 Console.WriteLine($"A batch of {fullPath} messages has been published to the queue.");
@@ -90,7 +90,7 @@ namespace DataEntryService
             }
         }
 
-        private static async Task SendFileByChunks(string fullPath, byte[] fileBytes, string fileName)
+        private static async Task SendFileByChunks(byte[] fileBytes, string fileName)
         {
 
             int chunksCount = (fileBytes.Length % MessageMaxSize) == 0
@@ -108,11 +108,11 @@ namespace DataEntryService
 
                 var chunkArray = Utils.SubArray(fileBytes, beginPosition, lengthOfArray);
                 
-                await SendMessage( _clientId, chunkArray, fullPath, fileName);
+                await SendMessage( _clientId, chunkArray, fileName);
             }
         }
 
-        private static async Task SendMessage( string clientId, byte[] fileBytes, string fullPath, string fileName)
+        private static async Task SendMessage( string clientId, byte[] fileBytes, string fileName)
         {
             var message = new ServiceBusMessage(new BinaryData(fileBytes));
             message.ApplicationProperties.Add("ClientId", clientId);
