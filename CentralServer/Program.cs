@@ -11,7 +11,6 @@ namespace CentralServer
         private static string connectionString = "Endpoint=sb://learnquque.servicebus.windows.net/;SharedAccessKeyName=myaccess;SharedAccessKey=agyIY+H3HnSVv2xgmKVgtTXTy4KEL1rKF8bUDoiDqQE=";
         private static string queueName = "filequeue";
         private const string WorkFolder = @"C:\LearnPdf\Server";
-        private static readonly Dictionary<FileChunk, byte[]> FilesByteses = new Dictionary<FileChunk, byte[]>();
 
         static async Task Main(string[] args)
         {
