@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Azure.Messaging.ServiceBus;
@@ -10,6 +11,8 @@ namespace CentralServer
         private static string connectionString = "Endpoint=sb://learnquque.servicebus.windows.net/;SharedAccessKeyName=myaccess;SharedAccessKey=agyIY+H3HnSVv2xgmKVgtTXTy4KEL1rKF8bUDoiDqQE=";
         private static string queueName = "filequeue";
         private const string WorkFolder = @"C:\LearnPdf\Server";
+        private static readonly Dictionary<FileChunk, byte[]> FilesByteses = new Dictionary<FileChunk, byte[]>();
+
         static async Task Main(string[] args)
         {
             var client = new ServiceBusClient(connectionString);
@@ -55,6 +58,7 @@ namespace CentralServer
         {
             string fileName = arg.Message.ApplicationProperties["FileName"].ToString();
             string clientId = arg.Message.ApplicationProperties["ClientId"].ToString();
+            int offset = (int)arg.Message.ApplicationProperties["Offset"];
 
             string saveFolder = Path.Combine(WorkFolder, clientId ?? string.Empty);
 

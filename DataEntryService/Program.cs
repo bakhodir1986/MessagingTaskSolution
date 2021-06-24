@@ -80,20 +80,25 @@ namespace DataEntryService
 
             var bytes = new byte[MessageMaxSize];
 
+            int offsetIndex = 0;
+
             while (file.Read(bytes, 0, MessageMaxSize) != 0)
             {
-                await SendMessage(_clientId, bytes, filename);
+                await SendMessage(_clientId, bytes, filename, offsetIndex * MessageMaxSize);
 
                 bytes = new byte[MessageMaxSize]; //clear buffer
+
+                offsetIndex++;
             }
         }
         
 
-        private static async Task SendMessage( string clientId, byte[] fileBytes, string fileName)
+        private static async Task SendMessage( string clientId, byte[] fileBytes, string fileName, int offset)
         {
             var message = new ServiceBusMessage(new BinaryData(fileBytes));
             message.ApplicationProperties.Add("ClientId", clientId);
             message.ApplicationProperties.Add("FileName", fileName);
+            message.ApplicationProperties.Add("Offset", offset);
 
             await _senderBus.SendMessageAsync(message);
         }

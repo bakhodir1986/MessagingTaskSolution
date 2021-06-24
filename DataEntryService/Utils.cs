@@ -14,12 +14,5 @@ namespace DataEntryService
             return result;
         }
 
-        public static byte[] GetBinaryFile(string filename)
-        {
-            using FileStream file = new FileStream(filename, FileMode.Open, FileAccess.Read);
-            var bytes = new byte[file.Length];
-            file.Read(bytes, 0, (int)file.Length);
-            return bytes;
-        }
     }
 }
