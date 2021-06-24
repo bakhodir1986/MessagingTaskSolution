@@ -15,7 +15,7 @@ namespace CentralServer
 
         public static void InsertIntoFileByChunks(string path, byte[] bytes, int offset)
         {
-            using var stream = new FileStream(path, FileMode.Append) {Position = offset};
+            using var stream = new FileStream(path, FileMode.Open) {Position = offset};
             stream.Write(bytes, 0, bytes.Length);
         }
     }
