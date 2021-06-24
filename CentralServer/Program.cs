@@ -67,8 +67,8 @@ namespace CentralServer
                 Directory.CreateDirectory(saveFolder);
             }
 
-            Utils.AppendAllBytes(Path.Combine(saveFolder, fileName ?? string.Empty)
-                , arg.Message.Body.ToArray());
+            Utils.InsertIntoFileByChunks(Path.Combine(saveFolder, fileName ?? string.Empty)
+                , arg.Message.Body.ToArray(), offset);
 
             // complete the message. messages is deleted from the queue. 
             await arg.CompleteMessageAsync(arg.Message);

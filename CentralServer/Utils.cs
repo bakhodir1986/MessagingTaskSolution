@@ -12,5 +12,11 @@ namespace CentralServer
             using var stream = new FileStream(path, FileMode.Append);
             stream.Write(bytes, 0, bytes.Length);
         }
+
+        public static void InsertIntoFileByChunks(string path, byte[] bytes, int offset)
+        {
+            using var stream = new FileStream(path, FileMode.Append) {Position = offset};
+            stream.Write(bytes, 0, bytes.Length);
+        }
     }
 }
