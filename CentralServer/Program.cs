@@ -59,14 +59,19 @@ namespace CentralServer
             string clientId = arg.Message.ApplicationProperties["ClientId"].ToString();
             int offset = (int)arg.Message.ApplicationProperties["Offset"];
 
-            string saveFolder = Path.Combine(WorkFolder, clientId ?? string.Empty);
+            if (string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(fileName))
+            {
+                return;
+            }
+
+            string saveFolder = Path.Combine(WorkFolder, clientId);
 
             if (!Directory.Exists(saveFolder))
             {
                 Directory.CreateDirectory(saveFolder);
             }
 
-            Utils.InsertIntoFileByChunks(Path.Combine(saveFolder, fileName ?? string.Empty)
+            Utils.InsertIntoFileByChunks(Path.Combine(saveFolder, fileName)
                 , arg.Message.Body.ToArray(), offset);
 
             // complete the message. messages is deleted from the queue. 
