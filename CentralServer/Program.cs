@@ -16,7 +16,7 @@ namespace CentralServer
         {
             var client = new ServiceBusClient(connectionString);
 
-            var processor = client.CreateProcessor(queueName, new ServiceBusProcessorOptions());
+            var processor = client.CreateProcessor(queueName);
 
             try
             {
