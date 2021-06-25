@@ -78,14 +78,14 @@ namespace DataEntryService
         {
             await using FileStream file = new FileStream(fullPath, FileMode.Open, FileAccess.Read);
 
-            int fileLength = (int)file.Length;
+            long fileLength = file.Length;
             bool isFileMoreThanMax = fileLength > MessageMaxSize;
-            int lengthOfArray = isFileMoreThanMax ? MessageMaxSize : fileLength;
+            long lengthOfArray = isFileMoreThanMax ? MessageMaxSize : fileLength;
             var bytes = new byte[lengthOfArray];
 
             int offsetIndex = 0;
 
-            while (file.Read(bytes, 0, lengthOfArray) != 0)
+            while (file.Read(bytes, 0, (int)lengthOfArray) != 0)
             {
                 await SendMessage(_clientId, bytes, filename, offsetIndex * MessageMaxSize);
 
@@ -93,7 +93,10 @@ namespace DataEntryService
                 {
                     offsetIndex++;
 
-                    int remaining = fileLength - offsetIndex * MessageMaxSize;
+                    long remaining = fileLength - offsetIndex * MessageMaxSize;
+
+                    if (remaining <= 0) break; //End of sending messages
+
                     bool isRemainingMoreThanMax = remaining > MessageMaxSize;
                     lengthOfArray = isRemainingMoreThanMax ? MessageMaxSize : remaining;
 
