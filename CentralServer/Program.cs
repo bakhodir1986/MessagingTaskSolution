@@ -16,7 +16,10 @@ namespace CentralServer
         {
             var client = new ServiceBusClient(connectionString);
 
-            var processor = client.CreateProcessor(queueName);
+            var processor = client.CreateProcessor(queueName, new ServiceBusProcessorOptions
+            {
+                ReceiveMode = ServiceBusReceiveMode.ReceiveAndDelete
+            });
 
             try
             {
@@ -74,8 +77,6 @@ namespace CentralServer
             Utils.InsertIntoFileByChunks(Path.Combine(saveFolder, fileName)
                 , arg.Message.Body.ToArray(), offset);
 
-            // complete the message. messages is deleted from the queue. 
-            await arg.CompleteMessageAsync(arg.Message);
         }
     }
 }
